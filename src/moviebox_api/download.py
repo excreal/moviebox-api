@@ -15,6 +15,8 @@ from moviebox_api._bases import (
 from moviebox_api.constants import (
     CURRENT_WORKING_DIR,
     DEFAULT_CHUNK_SIZE,
+    DEFAULT_HTTP_LIMITS,
+    DEFAULT_HTTP_TIMEOUT,
     DEFAULT_READ_TIMEOUT_ATTEMPTS,
     DEFAULT_TASKS,
     DOWNLOAD_PART_EXTENSION,
@@ -222,6 +224,8 @@ class MediaFileDownloader(BaseFileDownloaderAndHelper):
         """  # noqa: E501
 
         httpx_kwargs.setdefault("cookies", self.request_cookies)
+        httpx_kwargs.setdefault("timeout", DEFAULT_HTTP_TIMEOUT)
+        httpx_kwargs.setdefault("limits", DEFAULT_HTTP_LIMITS)
         self.group_series = group_series
 
         self.throttle_buster = ThrottleBuster(
@@ -408,6 +412,8 @@ class CaptionFileDownloader(BaseFileDownloaderAndHelper):
         """  # noqa: E501
 
         httpx_kwargs.setdefault("cookies", self.request_cookies)
+        httpx_kwargs.setdefault("timeout", DEFAULT_HTTP_TIMEOUT)
+        httpx_kwargs.setdefault("limits", DEFAULT_HTTP_LIMITS)
         self.group_series = group_series
 
         self.throttle_buster = ThrottleBuster(

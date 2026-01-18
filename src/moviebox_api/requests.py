@@ -4,14 +4,17 @@ Provide ways to interact with Moviebox using `httpx`
 
 import httpx
 from httpx import Response
-from httpx._config import DEFAULT_TIMEOUT_CONFIG
 from httpx._types import (
     CookieTypes,
     ProxyTypes,
     TimeoutTypes,
 )
 
-from moviebox_api.constants import DOWNLOAD_REQUEST_HEADERS
+from moviebox_api.constants import (
+    DEFAULT_HTTP_LIMITS,
+    DEFAULT_HTTP_TIMEOUT,
+    DOWNLOAD_REQUEST_HEADERS,
+)
 from moviebox_api.exceptions import EmptyResponseError
 from moviebox_api.helpers import (
     get_absolute_url,
@@ -35,7 +38,7 @@ class Session:
         self,
         headers: ProxyTypes | None = DOWNLOAD_REQUEST_HEADERS,
         cookies: CookieTypes | None = request_cookies,
-        timeout: TimeoutTypes = DEFAULT_TIMEOUT_CONFIG,
+        timeout: TimeoutTypes = DEFAULT_HTTP_TIMEOUT,
         proxy: ProxyTypes | None = None,
         **httpx_kwargs,
     ):
@@ -44,7 +47,7 @@ class Session:
         Args:
             headers (ProxyTypes | None, optional): Http request headers. Defaults to DOWNLOAD_REQUEST_HEADERS.
             cookies (CookieTypes | None , optional): Http request cookies. Defaults to request_cookies.
-            timeout (TimeoutTypes, optional): Http request timeout in seconds. Defaults to DEFAULT_TIMEOUT_CONFIG.
+            timeout (TimeoutTypes, optional): Http request timeout. Defaults to DEFAULT_HTTP_TIMEOUT.
             proxy (ProxyTypes | None, optional): Http requests proxy. Defaults to None.
 
         httpx_kwargs : Other keyword arguments for `httpx.AsyncClient`
@@ -53,6 +56,9 @@ class Session:
         self._cookies = cookies
         self._timeout = timeout
         self._proxy = proxy
+
+        # Set default limits if not provided
+        httpx_kwargs.setdefault("limits", DEFAULT_HTTP_LIMITS)
 
         self._client = httpx.AsyncClient(
             headers=headers,
@@ -87,16 +93,19 @@ class Session:
         Returns:
             Response: Httpx response object
         """
-        client = httpx.AsyncClient(
+        # Set default limits if not provided in kwargs
+        kwargs.setdefault("limits", DEFAULT_HTTP_LIMITS)
+        
+        async with httpx.AsyncClient(
             headers=self._headers,
             cookies=self._cookies,
             proxy=self._proxy,
             timeout=self._timeout,
             **kwargs,
-        )
-        response = await client.get(url, params=params)
-        response.raise_for_status()
-        return self._validate_response(response)
+        ) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            return self._validate_response(response)
 
     async def get_from_api(self, *args, **kwargs) -> dict:
         """Fetch data from api and extract the `data` field from the response

@@ -5,6 +5,7 @@ import typing as t
 from enum import IntEnum, StrEnum
 from pathlib import Path
 
+import httpx
 from throttlebuster.constants import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_READ_TIMEOUT_ATTEMPTS,
@@ -97,6 +98,26 @@ ITEM_DETAILS_PATH = "/detail"
 
 DEFAULT_TASKS = 5
 """Default number of connections for download"""
+
+"""HTTP Configuration for API requests and downloads"""
+
+DEFAULT_HTTP_TIMEOUT = httpx.Timeout(
+    connect=20.0,  # Time to establish connection
+    read=120.0,  # Time to read response data
+    write=60.0,  # Time to send request data
+    pool=20.0,  # Time to acquire connection from pool
+)
+"""Longer timeout configuration for all HTTP operations"""
+
+DEFAULT_HTTP_LIMITS = httpx.Limits(
+    max_connections=100,  # Total connection pool size
+    max_keepalive_connections=20,  # Keepalive connections
+    keepalive_expiry=60.0,  # Keep connections alive for 60s
+)
+"""Connection pool limits to enable keepalive and reduce connection churn"""
+
+DEFAULT_HTTP_RETRIES = 3
+"""Number of retries for transport-level failures (connect errors, etc.)"""
 
 
 class SubjectType(IntEnum):
